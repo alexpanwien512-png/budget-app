@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Budget">
+  <meta name="theme-color" content="#0066cc">
+  <title>Budget Tracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    body {
+      padding-top: max(env(safe-area-inset-top), 0px);
+      padding-bottom: max(env(safe-area-inset-bottom), 0px);
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+      color: white;
+      padding: calc(env(safe-area-inset-top) + 1rem) 1.25rem 1rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+    }
+
+    .header p {
+      font-size: 13px;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .content {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 1rem;
+      color: #333;
+    }
+
+    .input-group {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    input[type="date"],
+    input[type="number"],
+    input[type="text"] {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      color: #333;
+      font-family: inherit;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+
+    input[type="date"]:focus,
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.875rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      -webkit-appearance: none;
+      transition: transform 0.1s;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    .btn-income {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-expense {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-clear {
+      background: white;
+      color: #dc3545;
+      border: 1px solid #ddd;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .table-wrapper {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      margin-bottom: 2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      background: #fafafa;
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      color: #666;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .type-income {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .type-expense {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+    }
+
+    #emptyState {
+      text-align: center;
+      color: #999;
+      padding: 2rem 1rem;
+    }
+
+    .safe-bottom {
+      height: max(env(safe-area-inset-bottom), 1rem);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Budget Tracker</h1>
+      <p>Income & Expenses</p>
+    </div>
+
+    <div class="content">
+      <div class="metrics">
+        <div class="metric-card">
+          <div class="metric-label">Income</div>
+          <div class="metric-value type-income" id="totalIncome">0 EUR</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Expenses</div>
+          <div class="metric-value type-expense" id="totalExpenses">0 EUR</div>
+        </div>
+        <div class="metric-card full-width">
+          <div class="metric-label">Balance</div>
+          <div class="metric-value" id="balance">0 EUR</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Add Transaction</h2>
+        <div class="input-group">
+          <input type="date" id="transactionDate" />
+          <input type="number" id="transactionAmount" placeholder="Amount (EUR)" step="0.01" inputmode="decimal" />
+          <input type="text" id="transactionDesc" placeholder="Description" />
+        </div>
+        <div class="button-group">
+          <button class="btn-income" onclick="addIncome()">+ Income</button>
+          <button class="btn-expense" onclick="addExpense()">− Expense</button>
+        </div>
+        <button class="btn-clear" onclick="clearAllData()">🗑 Clear All</button>
+      </div>
+
+      <div class="section">
+        <h2>Transactions</h2>
+        <div class="table-wrapper">
+          <table id="transactionTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+          </table>
+          <p id="emptyState">No transactions</p>
+        </div>
+      </div>
+
+      <div class="safe-bottom"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'budget_tracker_iphone_v2';
+    let transactions = [];
+
+    function initDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('transactionDate').value = today;
+    }
+
+    function loadData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        transactions = saved ? JSON.parse(saved) : [];
+      } catch (e) {
+        transactions = [];
+      }
+      render();
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      } catch (e) {
+        console.error('Storage error:', e);
+      }
+      render();
+    }
+
+    function formatCurrency(num) {
+      return Math.round(num * 100) / 100;
+    }
+
+    function addIncome() {
+      const date = document.getElementById('transactionDate').value;
+      const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
+      const desc = document.getElementById('transactionDesc').value || 'Income';
+      
+      if (!date || amount <= 0) {
+        alert('Fill date & amount');
+        return;
+      }
+      
+      transactions.push({ date, amount: formatCurrency(amount), type: 'income', desc });
+      clearForm();
+      saveData();
+    }
+
+    function addExpense() {
+      const date = document.getElementById('transactionDate').value;
+      const amount = parseFloat(document.getElementById('transactionAmount').value) || 0;
+      const desc = document.getElementById('transactionDesc').value || 'Expense';
+      
+      if (!date || amount <= 0) {
+        alert('Fill date & amount');
+        return;
+      }
+      
+      transactions.push({ date, amount: formatCurrency(-amount), type: 'expense', desc });
+      clearForm();
+      saveData();
+    }
+
+    function deleteTransaction(index) {
+      if (confirm('Delete?')) {
+        transactions.splice(index, 1);
+        saveData();
+      }
+    }
+
+    function clearForm() {
+      document.getElementById('transactionAmount').value = '';
+      document.getElementById('transactionDesc').value = '';
+      initDate();
+    }
+
+    function clearAllData() {
+      if (confirm('Delete ALL transactions?')) {
+        transactions = [];
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+        render();
+      }
+    }
+
+    function render() {
+      const totalIncome = formatCurrency(transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0));
+      const totalExpenses = formatCurrency(Math.abs(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)));
+      const bal = formatCurrency(totalIncome - totalExpenses);
+
+      document.getElementById('totalIncome').textContent = totalIncome.toFixed(2) + ' EUR';
+      document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(2) + ' EUR';
+      document.getElementById('balance').textContent = bal.toFixed(2) + ' EUR';
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      if (transactions.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+      } else {
+        document.getElementById('emptyState').style.display = 'none';
+        
+        [...transactions].reverse().forEach((t, idx) => {
+          const actualIdx = transactions.length - 1 - idx;
+          const row = document.createElement('tr');
+          const isIncome = t.type === 'income';
+          const sign = isIncome ? '+' : '−';
+          const amountClass = isIncome ? 'type-income' : 'type-expense';
+          
+          row.innerHTML = `
+            <td>${t.date}</td>
+            <td>${t.desc}</td>
+            <td class="${amountClass}">${sign}${Math.abs(t.amount).toFixed(2)}</td>
+            <td><button class="delete-btn" onclick="deleteTransaction(${actualIdx})">✕</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    initDate();
+    loadData();
+  </script>
+</body>
+</html>
